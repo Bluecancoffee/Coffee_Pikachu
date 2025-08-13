@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>오늘의 운세</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px;
+        }
+        .fortune-card, .stats-card { 
+            background: #f0f0f0; 
+            padding: 20px; 
+            margin: 10px 0; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stats-card {
+            background: #e8f4f8;
+            border-left: 4px solid #2196F3;
+        }
+        button { 
+            background: #4CAF50; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #refreshStats {
+            background: #2196F3;
+        }
+        #refreshStats:hover {
+            background: #1976D2;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 200px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ccc;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-value {
+            font-weight: bold;
+            color: #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔮 오늘의 운세</h1>
+    
+    <!-- 운세 입력 섹션 -->
+    <div style="text-align: center;">
+        <input type="text" id="name" placeholder="이름" />
+        <input type="date" id="birthdate" />
+        <button onclick="getFortune()">운세 보기</button>
+    </div>
+    
+    <!-- 운세 결과 표시 영역 -->
+    <div id="result"></div>
+    
+    <!-- 통계 섹션 -->
+    <div class="stats-card">
+        <div class="stats-header">
+            <h3>📊 서비스 통계</h3>
+            <button id="refreshStats" onclick="getStats()">🔄 새로고침</button>
+        </div>
+        <div id="stats">
+            <div class="stat-item">
+                <span>로딩 중...</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 페이지 로드 시 통계 자동 로드
+        window.onload = function() {
+            getStats();
+        };
+        
+        async function getFortune() {
+            const name = document.getElementById('name').value;
+            const birthdate = document.getElementById('birthdate').value;
+            
+            if (!name || !birthdate) {
+                alert('이름과 생년월일을 모두 입력해주세요!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/fortune', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, birthdate})
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <div class="fortune-card">
+                        <h2>${data.name}님의 오늘 운세</h2>
+                        <p>📅 ${data.date}</p>
+                        <p>💕 연애운: ${data.love}</p>
+                        <p>💼 직장운: ${data.career}</p>
+                        <p>🏃 건강운: ${data.health}</p>
+                        <p>🎲 행운의 숫자: <strong>${data.lucky_number}</strong></p>
+                    </div>
+                `;
+                
+                // 운세를 본 후 통계 자동 새로고침
+                setTimeout(getStats, 500);
+            } catch (error) {
+                alert('오류가 발생했습니다. 다시 시도해주세요.');
+                console.error('Error:', error);
+            }
+        }
+        
+        async function getStats() {
+            try {
+                const response = await fetch('http://localhost:8000/api/stats');
+                const data = await response.json();
+                
+                const statsHtml = `
+                    <div class="stat-item">
+                        <span>📈 전체 조회수</span>
+                        <span class="stat-value">${data.total_requests.toLocaleString()}회</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>📆 오늘 조회수</span>
+                        <span class="stat-value">${data.today_requests}회</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>⏰ 마지막 업데이트</span>
+                        <span class="stat-value">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                `;
+                
+                document.getElementById('stats').innerHTML = statsHtml;
+                
+                // 버튼 애니메이션 효과
+                const button = document.getElementById('refreshStats');
+                button.style.transform = 'rotate(360deg)';
+                button.style.transition = 'transform 0.5s';
+                setTimeout(() => {
+                    button.style.transform = 'rotate(0deg)';
+                }, 500);
+                
+            } catch (error) {
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-item">
+                        <span style="color: red;">통계를 불러올 수 없습니다.</span>
+                    </div>
+                `;
+                console.error('Stats Error:', error);
+            }
+        }
+        
+        // 10초마다 자동으로 통계 새로고침 (선택사항)
+        setInterval(getStats, 10000);
+    </script>
+</body>
+</html>

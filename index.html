@@ -1,50 +1,43 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>요리 리스트</title>
+    <title>오늘의 운세</title>
     <style>
-        .korean { color: red; }
-        .japanese { color: orange; }
-        .western { color: blue; }
-        .other { color: green; }
-        .chinese { color: purple; }
-        img.header-icon {
-            width: 100px;  /* 이미지 크기 조정 */
-            height: auto;
-            vertical-align: middle;
-        }
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; }
+        .fortune-card { background: #f0f0f0; padding: 20px; margin: 10px 0; border-radius: 10px; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <img src="image/cutlery.png" alt="식기 아이콘" class="header-icon">
-    <h1 style="display: inline;">안녕하세요</h1>
-
-    <p>
-        <span class="korean">김치찌개</span>, 
-        <span class="western">파스타</span>, 
-        <span class="japanese">스시</span>, 
-        <span class="japanese">라멘</span><br>
-
-        <span class="korean">된장국</span>, 
-        <span class="western">피자</span>, 
-        <span class="western">햄버거</span>, 
-        <span class="other">탕수육</span><br>
-
-        <span class="korean">비빔밥</span>, 
-        <span class="western">바비큐립</span>, 
-        <span class="other">짬뽕</span>, 
-        <span class="other">쌀국수</span><br>
-
-        <span class="korean">갈비찜</span>, 
-        <span class="korean">오므라이스</span>, 
-        <span class="japanese">샤브샤브</span>, 
-        <span class="western">스테이크</span><br>
-
-        <span class="korean">냉면</span>, 
-        <span class="other">마파두부</span>, 
-        <span class="japanese">초밥</span>, 
-        <span class="western">크림스프</span>
-    </p>
+    <h1>🔮 오늘의 운세</h1>
+    <input type="text" id="name" placeholder="이름" />
+    <input type="date" id="birthdate" />
+    <button onclick="getFortune()">운세 보기</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function getFortune() {
+            const name = document.getElementById('name').value;
+            const birthdate = document.getElementById('birthdate').value;
+            
+            const response = await fetch('http://127.0.0.1:8000/api/fortune', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name, birthdate})
+            });
+            
+            const data = await response.json();
+            document.getElementById('result').innerHTML = `
+                <div class="fortune-card">
+                    <h2>${data.name}님의 오늘 운세</h2>
+                    <p>💕 연애운: ${data.love}</p>
+                    <p>💼 직장운: ${data.career}</p>
+                    <p>🏃 건강운: ${data.health}</p>
+                    <p>🎲 행운의 숫자: ${data.lucky_number}</p>
+                </div>
+            `;
+        }
+    </script>
 </body>
 </html>
